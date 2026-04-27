@@ -66,24 +66,37 @@ Fator -> NUMERO | IDENTIFIER | "(" Expressao ")"
 
 */
 static Operand parse_factor(Parser *parser) {
+    Operand op;
+
     if (parser->current_token.type == TOKEN_NUM) {
+        int value = parser->current_token.value;
+        
+        op = assembly_new_const(&parser->generator, value, NULL); // Quando é um numero o operand é aquele numero em inteiro, por isso precisamos pegar o inteiro do current token salvo em value
+
         parser_expect(parser, TOKEN_NUM);
-        return;
+
+        return op;
     }
 
     if (parser->current_token.type == TOKEN_IDENTIFIER) {
+        snprintf(op.name, MAX_NAME_SIZE, "%s", parser->current_token.lexeme); //Aqui o operand é a propria variavel afinal é o que é um indentificador
+
         parser_expect(parser, TOKEN_IDENTIFIER);
-        return;
+        return op;
     }
 
     if (parser->current_token.type == TOKEN_LEFT_PARENTESIS) {
         parser_expect(parser, TOKEN_LEFT_PARENTESIS);
-        parse_expression(parser);
+
+        op = parse_expression(parser); // Aqui o operand é o valor dentro do parentesis por que ele vai entrar fazer a conta e salvar em um temporario exemplo: 5 * (5*9) -> 5 * _T0. 
+
         parser_expect(parser, TOKEN_RIGHT_PARENTESIS);
-        return;
+        return op;
     }
 
     parser_error(parser, "esperado numero, identificador ou '('");
+
+    return op;
 }
 
 /*BNF:
@@ -93,12 +106,19 @@ Termo -> Fator ("*" Fator)*
 
 */
 static Operand parse_term(Parser *parser) {
-    parse_factor(parser);
+    
+    Operand left = parse_factor(parser);
 
     while (parser->current_token.type == TOKEN_MULT) {
         parser_expect(parser, TOKEN_MULT);
-        parse_factor(parser);
+        Operand right = parse_factor(parser);
+        Operand result = assembly_new_temp(&parser->generator, "Result_Mult");
+        assembly_emit_mul(&parser->generator, left, right, result);
+
+        left = result;
     }
+
+    return left;
 }
 /*
 
@@ -106,20 +126,35 @@ Expressao -> Termo (("+" | "-") Termo)*
 
 */
 static Operand parse_expression(Parser *parser) {
-    parse_term(parser);
+    Operand left = parse_term(parser);
 
     while (parser->current_token.type == TOKEN_PLUS ||
            parser->current_token.type == TOKEN_MINUS) {
 
-        if (parser->current_token.type == TOKEN_PLUS) {
+        TokenType operation = parser->current_token.type;
+
+        if (operation == TOKEN_PLUS) {
             parser_expect(parser, TOKEN_PLUS);
 
         } else {
             parser_expect(parser, TOKEN_MINUS);
         }
 
-        parse_term(parser);
+        Operand right = parse_term(parser);
+        Operand result = assembly_new_temp(&parser->generator, "Result_Sum");
+
+        if (operation == TOKEN_PLUS) {
+            assembly_emit_add(&parser->generator, left, right, result);
+        }
+        else {
+            parser_error(parser, "subtracao ainda nao implementada");
+            //assembly_emit_minus(&parser->generator,left,right,result)
+        }
+
+        left = result;
     }
+
+    return left;
 }
 
 /*
@@ -128,10 +163,21 @@ Declaracao -> "var" IDENTIFIER "=" Expressao
 
 */
 static void parse_declaration(Parser *parser) {
+    Operand variable;
+
     parser_expect(parser, TOKEN_VAR);
+
+    snprintf(variable.name, MAX_NAME_SIZE, "%s", parser->current_token.lexeme); 
     parser_expect(parser, TOKEN_IDENTIFIER);
+
     parser_expect(parser, TOKEN_EQUAL);
-    parse_expression(parser);
+
+    Operand expression_result =  parse_expression(parser);
+
+    assembly_emit_data(&parser->generator, "%s DATA 0", variable.name);
+    assembly_emit_code(&parser->generator, "LDA %s", expression_result.name);
+    assembly_emit_code(&parser->generator, "STA %s", variable.name);
+
 }
 /*
 
@@ -143,7 +189,8 @@ static void parse_command(Parser *parser) {
     if (parser->current_token.type == TOKEN_VAR) {
         parse_declaration(parser);
     } else {
-        parse_expression(parser);
+        Operand expression_result = parse_expression(parser);
+        assembly_emit_code(&parser->generator, "LDA %s", expression_result.name); //Precisa ser carregado na memoria para ele ficar no AC antes de dar HLT
     }
 }
 
@@ -167,4 +214,5 @@ void parser_parse(Parser *parser) {
     }
 
     printf("Programa correto.\n");
+
 }

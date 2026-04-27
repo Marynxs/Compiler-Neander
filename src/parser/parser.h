@@ -1,8 +1,8 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-#include "lexer.h"
-#include "assemblyGenerator.h"
+#include "../lexer/lexer.h"
+#include "../assemblyGenerator/assemblyGenerator.h"
 
 typedef struct {
     Lexer lexer;

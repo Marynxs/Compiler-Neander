@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "lexer.h"
+#include "../src/lexer/lexer.h"
 
 int main() {
     const char *source = "var B = 2 \nvar C = 5\n6*5=4";
