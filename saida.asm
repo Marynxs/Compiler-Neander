@@ -1,0 +1,37 @@
+.CODE
+
+     ORG 0
+
+     LDA B
+     STA _MULTIPLICAND_1
+     LDA C
+     STA _MULTIPLIER_2
+     LDA ZERO
+     STA _T0
+     _MULT_LOOP0:
+     LDA _MULTIPLIER_2
+     JZ _MULT_END0
+     LDA _T0
+     ADD _MULTIPLICAND_1
+     STA _T0
+     LDA _MULTIPLIER_2
+     ADD MINUS_1
+     STA _MULTIPLIER_2
+     JMP _MULT_LOOP0
+     _MULT_END0:
+     LDA A
+     ADD _T0
+     STA D
+     HLT
+
+.DATA
+
+     ZERO DATA 0
+     MINUS_1 DATA 255
+     A DATA 2
+     B DATA 3
+     C DATA 4
+     D DATA 0
+     _T0 DATA 0
+     _MULTIPLICAND_1 DATA 0
+     _MULTIPLIER_2 DATA 0

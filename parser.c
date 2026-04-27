@@ -46,9 +46,10 @@ static void parser_expect(Parser *parser, TokenType expected) {
     }
 }
 
-static void parse_expression(Parser *parser);
+static Operand parse_expression(Parser *parser);
 
 void parser_init(Parser *parser, const char *input) {
+    assembly_init(&parser->generator);
     lexer_init(&parser->lexer, input);
     parser_advance(parser);
 }
@@ -64,7 +65,7 @@ static void skip_newlines(Parser *parser) {
 Fator -> NUMERO | IDENTIFIER | "(" Expressao ")"
 
 */
-static void parse_factor(Parser *parser) {
+static Operand parse_factor(Parser *parser) {
     if (parser->current_token.type == TOKEN_NUM) {
         parser_expect(parser, TOKEN_NUM);
         return;
@@ -91,7 +92,7 @@ Termo -> Fator ("*" Fator)*
 
 
 */
-static void parse_term(Parser *parser) {
+static Operand parse_term(Parser *parser) {
     parse_factor(parser);
 
     while (parser->current_token.type == TOKEN_MULT) {
@@ -104,7 +105,7 @@ static void parse_term(Parser *parser) {
 Expressao -> Termo (("+" | "-") Termo)*
 
 */
-static void parse_expression(Parser *parser) {
+static Operand parse_expression(Parser *parser) {
     parse_term(parser);
 
     while (parser->current_token.type == TOKEN_PLUS ||
@@ -112,6 +113,7 @@ static void parse_expression(Parser *parser) {
 
         if (parser->current_token.type == TOKEN_PLUS) {
             parser_expect(parser, TOKEN_PLUS);
+
         } else {
             parser_expect(parser, TOKEN_MINUS);
         }

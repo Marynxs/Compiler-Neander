@@ -5,7 +5,7 @@ int main() {
         "var A = 2\n"
         "var B = 3\n"
         "var C = 4\n"
-        "var D A + B";
+        "var D = A + B";
 
     Parser parser;
     parser_init(&parser, source);

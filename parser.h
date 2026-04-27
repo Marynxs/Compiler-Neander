@@ -2,10 +2,12 @@
 #define PARSER_H
 
 #include "lexer.h"
+#include "assemblyGenerator.h"
 
 typedef struct {
     Lexer lexer;
     Token current_token;
+    AssemblyGenerator generator;
 } Parser;
 
 void parser_init(Parser *parser, const char *input);
