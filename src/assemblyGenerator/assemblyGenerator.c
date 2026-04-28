@@ -132,6 +132,22 @@ void assembly_emit_add(AssemblyGenerator *gen, Operand left, Operand right, Oper
     assembly_emit_code(gen, "STA %s", result.name);
 }
 
+void assembly_emit_minus(AssemblyGenerator *gen, Operand left, Operand right, Operand result) {
+
+    assembly_emit_code(gen, "LDA %s", right.name);
+    assembly_emit_code(gen, "NOT");
+    assembly_emit_code(gen, "ADD ONE");
+    assembly_emit_code(gen, "STA %s", result.name);
+
+
+    assembly_emit_code(gen, "LDA %s", left.name);
+    assembly_emit_code(gen, "ADD %s", result.name);
+    assembly_emit_code(gen, "STA %s", result.name);
+
+}
+
+
+
 /*
 Aqui ensina pro Assembly a saida de como é a multiplicação
 
@@ -146,29 +162,39 @@ void assembly_emit_mul(AssemblyGenerator *gen, Operand left, Operand right, Oper
     snprintf(loop_label, MAX_NAME_SIZE, "_MULT_LOOP%d", id);
     snprintf(end_label, MAX_NAME_SIZE, "_MULT_END%d", id);
 
-    Operand multiplicand = assembly_new_temp(gen, "MULTIPLICAND");  //multiplicando
-    Operand multiplier = assembly_new_temp(gen, "MULTIPLIER");  //multiplicador (o que soma x vezes)
+    char multiplicand[MAX_NAME_SIZE];
+    char multiplier[MAX_NAME_SIZE];
+
+    //assembly_emit_code(gen, "\n\n   MULTIPLICATION Nº%d \n\n", id + 1);
+
+    snprintf(multiplicand, MAX_NAME_SIZE, "_MULTIPLICAND_%d", id); //multiplicando
+    snprintf(multiplier, MAX_NAME_SIZE, "_MULTIPLIER_%d", id); //multiplicador (o que soma x vezes)
+
+    assembly_emit_data(gen, "%s DATA 0", multiplicand);
+    assembly_emit_data(gen, "%s DATA 0", multiplier);
   
 
     assembly_emit_code(gen, "LDA %s", left.name);
-    assembly_emit_code(gen, "STA %s", multiplicand.name);
+    assembly_emit_code(gen, "STA %s", multiplicand);
 
     assembly_emit_code(gen, "LDA %s", right.name);
-    assembly_emit_code(gen, "STA %s", multiplier.name);
+    assembly_emit_code(gen, "STA %s", multiplier);
 
     assembly_emit_code(gen, "LDA ZERO");
     assembly_emit_code(gen, "STA %s", result.name);
 
     assembly_emit_code(gen, "%s:", loop_label);
 
-    assembly_emit_code(gen, "LDA %s", multiplier.name);
+    assembly_emit_code(gen, "LDA %s", multiplier);
     assembly_emit_code(gen, "JZ %s", end_label);
 
-    assembly_emit_add(gen, result, multiplicand, result);
+    assembly_emit_code(gen, "LDA %s", result.name);
+    assembly_emit_code(gen, "ADD %s", multiplicand);
+    assembly_emit_code(gen, "STA %s", result.name);
     
-    assembly_emit_code(gen, "LDA %s", multiplier.name);
+    assembly_emit_code(gen, "LDA %s", multiplier);
     assembly_emit_code(gen, "ADD MINUS_1");
-    assembly_emit_code(gen, "STA %s", multiplier.name);
+    assembly_emit_code(gen, "STA %s", multiplier);
 
     assembly_emit_code(gen, "JMP %s", loop_label);
 
@@ -199,6 +225,7 @@ int assembly_write_file(AssemblyGenerator *gen, const char *filename) {
 
     fprintf(file, "     ZERO DATA 0\n");
     fprintf(file, "     MINUS_1 DATA 255\n");
+    fprintf(file, "     ONE DATA 1\n");
 
     for (int i = 0; i < gen->data_count; i++) {
         fprintf(file, "     %s\n", gen->data[i]);

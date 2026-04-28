@@ -34,7 +34,9 @@ Operand assembly_new_temp(AssemblyGenerator *gen, const char *optional_name);
 Operand assembly_new_const(AssemblyGenerator *gen, int value, const char *optional_name);
 
 void assembly_emit_add(AssemblyGenerator *gen, Operand left, Operand right, Operand result);
+void assembly_emit_minus(AssemblyGenerator *gen, Operand left, Operand right, Operand result);
 void assembly_emit_mul(AssemblyGenerator *gen, Operand left, Operand right, Operand result);
+
 
 int assembly_write_file(AssemblyGenerator *gen, const char *filename);
 

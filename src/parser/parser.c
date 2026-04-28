@@ -147,8 +147,7 @@ static Operand parse_expression(Parser *parser) {
             assembly_emit_add(&parser->generator, left, right, result);
         }
         else {
-            parser_error(parser, "subtracao ainda nao implementada");
-            //assembly_emit_minus(&parser->generator,left,right,result)
+            assembly_emit_minus(&parser->generator,left,right,result);
         }
 
         left = result;
