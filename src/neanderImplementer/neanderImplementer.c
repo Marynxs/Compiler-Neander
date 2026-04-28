@@ -127,10 +127,10 @@ int neander_step(NeanderImplementer *cpu) {
         return 0;
     }
 
-    // FETCH
+    // Essa parte faz o fetch
     cpu->IR = fetch_byte(cpu);
 
-    // DECODE + EXECUTE
+    // Aqui faz o Decode e o execute
     switch (cpu->IR) {
         case OPCODE_NOP:
             break;
