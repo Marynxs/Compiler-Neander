@@ -7,9 +7,9 @@
 #define OPCODE_STA 0x10
 #define OPCODE_LDA 0x20
 #define OPCODE_ADD 0x30
-#define OPCODE_OR  0x50
-#define OPCODE_AND 0x60
-#define OPCODE_NOT 0x70
+#define OPCODE_OR  0x40
+#define OPCODE_AND 0x50
+#define OPCODE_NOT 0x60
 #define OPCODE_JMP 0x80
 #define OPCODE_JN  0x90
 #define OPCODE_JZ  0xA0
@@ -54,7 +54,7 @@ void neander_load_memory(NeanderImplementer *cpu, const uint8_t *memory, int siz
 }
 
 int neander_load_mem_file(NeanderImplementer *cpu, const char *filename) {
-    FILE *file = fopen(filename, "r");
+    FILE *file = fopen(filename, "rb");
 
     if (file == NULL) {
         return 0;
@@ -62,12 +62,36 @@ int neander_load_mem_file(NeanderImplementer *cpu, const char *filename) {
 
     memset(cpu->memory, 0, NEANDER_MEMORY_SIZE);
 
-    int value;
-    int address = 0;
+    unsigned char header[4];
 
-    while (address < NEANDER_MEMORY_SIZE && fscanf(file, "%x", &value) == 1) {
-        cpu->memory[address] = (uint8_t)(value & 0xFF);
-        address++;
+    if (fread(header, sizeof(unsigned char), 4, file) != 4) {
+        fclose(file);
+        return 0;
+    }
+
+    if (header[0] != 0x03 ||
+        header[1] != 0x4E ||
+        header[2] != 0x44 ||
+        header[3] != 0x52) {
+        fclose(file);
+        return 0;
+    }
+
+    for (int i = 0; i < NEANDER_MEMORY_SIZE; i++) {
+        unsigned char low_byte;
+        unsigned char high_byte;
+
+        if (fread(&low_byte, sizeof(unsigned char), 1, file) != 1) {
+            fclose(file);
+            return 0;
+        }
+
+        if (fread(&high_byte, sizeof(unsigned char), 1, file) != 1) {
+            fclose(file);
+            return 0;
+        }
+
+        cpu->memory[i] = low_byte;
     }
 
     fclose(file);

@@ -4,6 +4,7 @@
 #include <string.h>
 #include <ctype.h>
 
+
 #define MAX_LINE_SIZE 256
 #define MAX_TOKENS 4
 
@@ -141,9 +142,9 @@ static int opcode_for(const char *op) {
     if (strcmp(op, "STA") == 0) return 0x10;
     if (strcmp(op, "LDA") == 0) return 0x20;
     if (strcmp(op, "ADD") == 0) return 0x30;
-    if (strcmp(op, "OR") == 0) return 0x50;
-    if (strcmp(op, "AND") == 0) return 0x60;
-    if (strcmp(op, "NOT") == 0) return 0x70;
+    if (strcmp(op, "OR") == 0) return 0x40;
+    if (strcmp(op, "AND") == 0) return 0x50;
+    if (strcmp(op, "NOT") == 0) return 0x60;
     if (strcmp(op, "JMP") == 0) return 0x80;
     if (strcmp(op, "JN") == 0) return 0x90;
     if (strcmp(op, "JZ") == 0) return 0xA0;
@@ -151,7 +152,6 @@ static int opcode_for(const char *op) {
 
     return -1;
 }
-
 
 /*
 
@@ -533,14 +533,22 @@ int assembler_assemble_file(Assembler *assembler, const char *asm_filename) {
 }
 
 int assembler_write_mem_file(Assembler *assembler, const char *mem_filename) {
-    FILE *file = fopen(mem_filename, "w");
+    FILE *file = fopen(mem_filename, "wb");
 
     if (file == NULL) {
         return 0;
     }
 
+    unsigned char header[4] = {0x03, 0x4E, 0x44, 0x52};
+
+    fwrite(header, sizeof(unsigned char), 4, file);
+
     for (int i = 0; i < NEANDER_MEMORY_SIZE; i++) {
-        fprintf(file, "%02X\n", assembler->memory[i]);
+        unsigned char low_byte = assembler->memory[i] & 0xFF;
+        unsigned char high_byte = 0x00;
+
+        fwrite(&low_byte, sizeof(unsigned char), 1, file);
+        fwrite(&high_byte, sizeof(unsigned char), 1, file);
     }
 
     fclose(file);

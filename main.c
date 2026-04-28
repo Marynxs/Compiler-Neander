@@ -6,7 +6,7 @@
 
 int main() {
     const char *source =
-        "var A = 2 * 3\n var B = 12 \n var C = A * B";
+        "5 + 1 + 5*2 * (4 + 2 -(3-2))";
 
     printf("=== CODIGO FONTE ===\n");
     printf("%s\n", source);
